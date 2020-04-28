@@ -62,14 +62,25 @@ resource "azurerm_virtual_machine" "main" {
   }
   os_profile {
     computer_name  = "hostname"
-    admin_username = "fabia"
-    admin_password = "Password1234!"
+    admin_username = var.admin_username
+    admin_password = var.admin_password
   }
   os_profile_linux_config {
     disable_password_authentication = true
     ssh_keys {
       key_data = file("~/.ssh/id_rsa.pub")
-      path     = "/home/fabia/.ssh/authorized_keys"
+      path     = "/home/${var.admin_username}/.ssh/authorized_keys"
+    }
+  }
+  provisioner "file" {
+    source      = "~/.ssh/id_rsa.pub"
+    destination = "public-key"
+
+    connection {
+      type        = "ssh"
+      host        = azurerm_public_ip.main.ip_address
+      user        = var.admin_username
+      private_key = file("~/.ssh/id_rsa")
     }
   }
 }
